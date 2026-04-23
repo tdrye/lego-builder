@@ -9,13 +9,22 @@ export default function PhotoCapture({ onGenerate, onBack }) {
   function handleFile(e) {
     const file = e.target.files[0];
     if (!file) return;
-    setMimeType(file.type || 'image/jpeg');
     const reader = new FileReader();
     reader.onload = (ev) => {
-      const result = ev.target.result;
-      setPreview(result);
-      const base64 = result.split(',')[1];
-      setImageData(base64);
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 1024;
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        setPreview(dataUrl);
+        setMimeType('image/jpeg');
+        setImageData(dataUrl.split(',')[1]);
+      };
+      img.src = ev.target.result;
     };
     reader.readAsDataURL(file);
   }
